@@ -1,5 +1,6 @@
 from rdf_utils.bigg_definition import Bigg
-from rdf_utils.big_classes import Organization, Building, LocationInfo, CadastralInfo, BuildingSpace, Area
+from rdf_utils.big_classes import Organization, Building, LocationInfo, CadastralInfo, BuildingSpace, Area, \
+    BuildingConstructionElement
 from slugify import slugify as slugify
 from GPG.transform_functions import *
 from utils import *
@@ -19,6 +20,7 @@ def set_params(organization, s, namespace):
     BuildingSpace.set_namespace(namespace)
     CadastralInfo.set_namespace(namespace)
     Area.set_namespace(namespace)
+    BuildingConstructionElement.set_namespace(namespace)
 
 
 def get_mappings(group):
@@ -256,6 +258,10 @@ def get_mappings(group):
             "gross_floor_area_under_ground": {
                 "type": Bigg.hasAreas,
                 "link": "Num_Ens_Inventari"
+            },
+            "building_element": {
+                "type": Bigg.isAssociatedWithElements,
+                "link": "Num_Ens_Inventari"
             }
         }
     }
@@ -331,11 +337,29 @@ def get_mappings(group):
             }
         }
     }
+    building_element = {
+        "name": "building_element",
+        "class": BuildingConstructionElement,
+        "type": {
+            "origin": "row"
+        },
+        "params": {
+            "raw": {
+                "buildingConstructionElementType": "Building",
+            },
+            "mapping": {
+                "subject": {
+                    "key": "Num_Ens_Inventari",
+                    "operations": [decode_hbase, id_zfill, construction_element_subject]
+                }
+            }
+        }
+    }
     grouped_modules = {
         "all": [department_organization, building_organization, building, location_info, cadastral_info, building_space,
-                gross_floor_area, gross_floor_area_under_ground, gross_floor_area_above_ground],
+                gross_floor_area, gross_floor_area_under_ground, gross_floor_area_above_ground, building_element],
         "buildings": [building_organization, building, location_info, cadastral_info, building_space,
-                      gross_floor_area, gross_floor_area_under_ground, gross_floor_area_above_ground],
+                      gross_floor_area, gross_floor_area_under_ground, gross_floor_area_above_ground, building_element],
         "other": [others_organization]
     }
     return grouped_modules[group]

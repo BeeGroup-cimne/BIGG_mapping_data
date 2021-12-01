@@ -128,6 +128,26 @@ class BuildingConstructionElement(BIGGObjects):
         self.buildingConstructionElementType = buildingConstructionElementType
 
 
+class EnergyEfficiencyMeasure(BIGGObjects):
+    __rdf_type__ = Bigg.EnergyEfficiencyMeasure
+
+    def __init__(self, subject, energyEfficiencyMeasureType=None, energyEfficiencyMeasureDescription=None,
+                 shareOfAffectedElement=None, energyEfficiencyMeasureOperationalDate=None,
+                 energyEfficiencyMeasureInvestment=None, energyEfficiencyMeasureInvestmentCurrency=None,
+                 energyEfficiencyMeasureCurrencyExchangeRate=None, energyEfficiencyMeasureSavingsToInvestmentRatio=None,
+                 energySourcePriceEscalationRate=None):
+        super().__init__(subject)
+        self.energyEfficiencyMeasureType = energyEfficiencyMeasureType
+        self.energyEfficiencyMeasureDescription = energyEfficiencyMeasureDescription
+        self.shareOfAffectedElement = shareOfAffectedElement
+        self.energyEfficiencyMeasureOperationalDate = energyEfficiencyMeasureOperationalDate
+        self.energyEfficiencyMeasureInvestment = energyEfficiencyMeasureInvestment
+        self.energyEfficiencyMeasureInvestmentCurrency = energyEfficiencyMeasureInvestmentCurrency
+        self.energyEfficiencyMeasureCurrencyExchangeRate = energyEfficiencyMeasureCurrencyExchangeRate
+        self.energyEfficiencyMeasureSavingsToInvestmentRatio = energyEfficiencyMeasureSavingsToInvestmentRatio
+        self.energySourcePriceEscalationRate = energySourcePriceEscalationRate
+
+
 class Device(BIGGObjects):
     __rdf_type__ = Bigg.Device
     def __init__(self, subject, deviceName=None, deviceType=None,

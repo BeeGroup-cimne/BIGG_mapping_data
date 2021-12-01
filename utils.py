@@ -18,6 +18,10 @@ def decode_hbase(value):
     return ""
 
 
+def join_params(args, joiner='~'):
+    return joiner.join(args)
+
+
 def zfill_param(key, num):
     return key.zfill(num)
 
@@ -52,6 +56,10 @@ gross_area_subject_under = partial(__area_subject__, a_type="GrossFloorAreaUnder
 
 def construction_element_subject(key):
     return f"ELEMENT-{key}"
+
+
+def eem_subject(key):
+    return f"EEM-{key}"
 
 
 def device_subject(key, source):

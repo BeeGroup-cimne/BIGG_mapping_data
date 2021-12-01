@@ -43,11 +43,12 @@ if __name__ == "__main__":
         x.update({"Num_Ens_Inventari": n_ens})
         dic_list.append(x)
     df = pd.DataFrame.from_records(dic_list)
+    neo4j_connection = {"uri": config['neo4j']['uri'],
+                        "auth": (config['neo4j']['username'], config['neo4j']['password'])}
     if args.organizations:
         g = generate_rdf(get_mappings("all"), df)
 
         # Get all existing Department Organizations
-        neo4j_connection = {"uri": config['neo4j']['uri'], "auth": (config['neo4j']['username'], config['neo4j']['password'])}
         neo = GraphDatabase.driver(**neo4j_connection)
         with neo.session() as s:
             organization_names = s.run("""

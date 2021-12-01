@@ -88,15 +88,32 @@ def __mapping_params__(params, row):
     else:
         for k, v in params['mapping'].items():
             __check_basic_syntax__(v, mapping_params_mandatory_fields)
-            if v['key'] in row:
-                value = row[v['key']]
-                if not value or value == b'nan' or pd.isna(value):
-                    continue
+            if isinstance(v['key'], list):
+                f_value = []
+                for v1 in v['key']:
+                    __check_basic_syntax__(v1, mapping_params_mandatory_fields)
+                    if v1['key'] in row:
+                        value = row[v1['key']]
+                        if not value or value == b'nan' or pd.isna(value):
+                            continue
+                        for func in v1['operations']:
+                            value = func(value)
+                        f_value.append(value)
+                    else:
+                        continue
                 for func in v['operations']:
-                    value = func(value)
-                mapping_dict[k] = value
+                    f_value = func(f_value)
+                mapping_dict[k] = f_value
             else:
-                continue
+                if v['key'] in row:
+                    value = row[v['key']]
+                    if not value or value == b'nan' or pd.isna(value):
+                        continue
+                    for func in v['operations']:
+                        value = func(value)
+                    mapping_dict[k] = value
+                else:
+                    continue
     return mapping_dict
 
 
