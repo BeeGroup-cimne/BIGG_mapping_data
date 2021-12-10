@@ -137,8 +137,11 @@ if __name__ == "__main__":
     main_org_params.add_argument("--namespace", "-n", help="The subjects namespace uri", required=True)
     main_org_params.add_argument("--type", "-t", help="The type to import [static] or [ts]", required=True)
 
-    # args_t = ["-name", "Generalitat de Catalunya", "-n", "http://data.icaen.cat#", "-u", "icaen", "-t", "static"]
-    args = parser.parse_args()
+    if os.getenv("PYCHARM_HOSTED"):
+        args_t = ["-name", "Generalitat de Catalunya", "-n", "http://data.icaen.cat#", "-u", "icaen", "-t", "static"]
+        args = parser.parse_args(args_t)
+    else:
+        args = parser.parse_args()
     # read config file
     with open("./config.json") as config_f:
         config = json.load(config_f)

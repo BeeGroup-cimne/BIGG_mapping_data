@@ -37,9 +37,6 @@ def get_mappings(groups):
             "origin": "row",
         },
         "params": {
-            "raw": {
-                "organizationDivisionType": "Department"
-            },
             "mapping": {
                 "subject": {
                     "key": "name",
@@ -47,6 +44,10 @@ def get_mappings(groups):
                 },
                 "organizationName": {
                     "key": "name",
+                    "operations": []
+                },
+                "organizationDivisionType": {
+                    "key": "type",
                     "operations": []
                 }
             }

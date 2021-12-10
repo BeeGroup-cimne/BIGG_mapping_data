@@ -9,12 +9,12 @@ from rdf_utils.rdf_functions import generate_rdf
 from utils import save_rdf_with_source
 
 source = "Org"
-#args_t = ["-name", "Generalitat de Catalunya", "-n", "http://data.icaen.cat#", "-u", "icaen"]
+#args_t = ["-f", "Organization/data/organizations.xls", "-name", "Generalitat de Catalunya", "-n", "http://data.icaen.cat#", "-u", "icaen"]
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Mapping of Organization data to neo4j.')
     exec_settings = parser.add_argument_group("General", "General settings of the script")
-    exec_settings.add_argument("-f", "--file", help="Import the organization from file")
+    exec_settings.add_argument("-f", "--file", help="Import the organization from file", required=True)
 
     main_org_params = parser.add_argument_group("Organization",
                                                 "Set the main organization information for importing the data")
@@ -31,8 +31,7 @@ if __name__ == "__main__":
     level = 0
     while True:
         try:
-            org_levels_df.append(pd.read_excel(
-                "Organization/data/2021-10 Entitats GdC Registre-sector-public v1 (1).xls", sheet_name=level))
+            org_levels_df.append(pd.read_excel(args.file, sheet_name=level))
             level += 1
         except IndexError:
             break

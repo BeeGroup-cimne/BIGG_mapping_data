@@ -1,6 +1,6 @@
 import argparse
 import json
-
+import os
 import neo4j
 from rdflib import Namespace
 from GPG.GPG_mapping import *
@@ -11,7 +11,6 @@ from utils import save_rdf_with_source
 from fuzzywuzzy import process
 
 source = "GPG"
-# args_t = ["-name", "Generalitat de Catalunya", "-n", "http://data.icaen.cat#", "-u", "icaen", "-o"]
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Mapping of GPG data to neo4j.')
@@ -23,8 +22,11 @@ if __name__ == "__main__":
     main_org_params.add_argument("--organization_name", "-name", help="The main organization name", required=True)
     main_org_params.add_argument("--user", "-u", help="The main organization name", required=True)
     main_org_params.add_argument("--namespace", "-n", help="The subjects namespace uri", required=True)
-
-    args = parser.parse_args()
+    if os.getenv("PYCHARM_HOSTED"):
+        args_t = ["-name", "Generalitat de Catalunya", "-n", "http://icaen.cat#", "-u", "icaen", "-o"]
+        args = parser.parse_args(args_t)
+    else:
+        args = parser.parse_args()
     # read config file
     with open("./config.json") as config_f:
         config = json.load(config_f)
@@ -48,17 +50,18 @@ if __name__ == "__main__":
     if args.organizations:
         g = generate_rdf(get_mappings("all"), df)
 
-        # Get all existing Department Organizations
+        # Get all existing Organizations
         neo = GraphDatabase.driver(**neo4j_connection)
+        main_org_subject = n[slugify(args.organization_name)]
         with neo.session() as s:
-            organization_names = s.run("""
-            MATCH (m:ns0__Organization {uri: "http://data.icaen.cat#generalitat-de-catalunya"})-[*]->(n:ns0__Organization {ns0__organizationDivisionType: 'Department'})
+            organization_names = s.run(f"""
+            MATCH (m:ns0__Organization {{uri: "{main_org_subject}"}})-[*]->(n:ns0__Organization{{ns0__organizationDivisionType: "Department"}})
             RETURN n.uri
             """)
-            uri = [x.value() for x in organization_names]
+            dep_uri = [x.value() for x in organization_names]
 
         # Get all organizations in graph
-        query = """
+        query_department = """
            PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#>
            PREFIX bigg:<http://example/BiggOntology#>
            SELECT DISTINCT ?sub
@@ -67,14 +70,14 @@ if __name__ == "__main__":
                ?sub bigg:organizationDivisionType "Department" .  
            }    
         """
-        r = g.query(query)
+        r_dep = g.query(query_department)
         g_altres = generate_rdf(get_mappings("other"), pd.DataFrame())
         g += g_altres
         altres_subj = list(set(g_altres.subjects()))[0]
-        g.add((rdflib.URIRef("http://data.icaen.cat#generalitat-de-catalunya"), Bigg.hasSubOrganization, altres_subj))
-        for dep_org in r:
+        g.add((rdflib.URIRef(main_org_subject), Bigg.hasSubOrganization, altres_subj))
+        for dep_org in r_dep:
             query = str(dep_org[0])
-            choices = uri
+            choices = dep_uri
             # Get a list of matches ordered by score, default limit to 5
             match, score = process.extractOne(query, choices)
             if score > 90:
@@ -89,7 +92,6 @@ if __name__ == "__main__":
                     g2.add((altres_subj, p, o))
                 g.remove((dep_org[0], None, None))
                 g += g2
-
     else:
         g = generate_rdf(get_mappings("buildings"), df)
 
