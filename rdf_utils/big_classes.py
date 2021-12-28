@@ -28,7 +28,8 @@ class Organization(BIGGObjects):
     __rdf_type__ = Bigg.Organization
 
     def __init__(self, subject, organizationName=None, organizationType=None, organizationDivisionType=None,
-                 organizationContactPersonName=None, organizationEmail=None, organizationTelephoneNumber=None):
+                 organizationContactPersonName=None, organizationEmail=None, organizationTelephoneNumber=None,
+                 organizationLocalVAT=None):
         super().__init__(subject)
         self.organizationName = organizationName
         self.organizationType = organizationType
@@ -36,6 +37,7 @@ class Organization(BIGGObjects):
         self.organizationContactPersonName = organizationContactPersonName
         self.organizationEmail = organizationEmail
         self.organizationTelephoneNumber = organizationTelephoneNumber
+        self.organizationLocalVAT = organizationLocalVAT
 
 
 class Building(BIGGObjects):
@@ -183,3 +185,12 @@ class MeasurementList(BIGGObjects):
         self.measurementSourceForEnergy = measurementSourceForEnergy
         self.outputProtocol = outputProtocol
         self.outputSignalType = outputSignalType
+
+
+class UtilityPointOfDelivery(BIGGObjects):
+    __rdf_type__ = Bigg.UtilityPointOfDelivery
+    def __init__(self, subject, pointOfDeliveryIDFromUser=None, utilityType=None):
+        super().__init__(subject)
+        self.pointOfDeliveryIDFromUser = pointOfDeliveryIDFromUser
+        self.utilityType = utilityType
+

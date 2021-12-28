@@ -7,7 +7,7 @@ import urllib
 import happybase
 import pandas as pd
 from rdflib import Namespace
-from Gemweb.Gemweb_mapping import *
+from Datadis.Datadis_mapping import *
 from rdf_utils.rdf_functions import generate_rdf
 from utils import save_rdf_with_source
 
@@ -15,57 +15,44 @@ from utils import save_rdf_with_source
 def static_mapping(args, source, hbase_conn, neo4j_connection):
     # get supplies from HBASE
     supplies_table = f"{source}_supplies_{args.user}".lower()
-    supplies_list = []
-    for data in get_hbase_data_batch(hbase_conn, supplies_table, batch_size=100000):
-        for gem_id, data1 in data:
-            data1.update({"dev_gem_id": gem_id})
-            supplies_list.append(data1)
-    supplies_df = pd.DataFrame.from_records(supplies_list)
-
-    # get buildings from HBASE
-    building_table = f"{source}_buildings_{args.user}".lower()
-    building_list = []
-    for data in get_hbase_data_batch(hbase_conn, building_table, batch_size=100000):
-        for gem_id, data1 in data:
-            data1.update({"build_gem_id": gem_id})
-            building_list.append(data1)
-    building_df = pd.DataFrame.from_records(building_list)
-    building_df.set_index("build_gem_id", inplace=True)
-
-    # Join dataframes by link
-    df = supplies_df.join(building_df, on=b'info:id_centres_consum', lsuffix="supply", rsuffix="building")
-
     neo = GraphDatabase.driver(**neo4j_connection)
-
     with neo.session() as ses:
-        source_id = ses.run(
-            f"""Match (o: ns0__Organization{{uri:'{args.namespace}{slugify(args.organization_name)}'}})-[:ns0__hasSource]->(s:GemwebSource) 
-            return id(s)""")
-        source_id = source_id.single().get("id(s)")
+        datadis_source = ses.run(f"""
+            Match (u:ns0__UtilityPointOfDelivery)<-[*]-(b:ns0__Building)<-[*]-(o:ns0__Organization{{user_id:"{args.user}"}})
+            return u.ns0__pointOfDeliveryIDFromUser , b.ns0__buildingIDFromOrganization
+            """
+                                 )
+        cups_bcode = {x['u.ns0__pointOfDeliveryIDFromUser']: x['b.ns0__buildingIDFromOrganization'] for x in datadis_source}
 
-    ids_ens = []
-    with neo.session() as ses:
-        buildings_neo = ses.run(
-            f"""Match (n:ns0__Building)<-[*]-(o:ns0__Organization)-[:ns0__hasSource]->(s:GemwebSource) 
-            Where id(s)={source_id} 
-            return n.uri""")
-        ids_ens = list(set([urlparse(x.get("n.uri")).fragment.split("-")[1] for x in buildings_neo]))
-    # create num_ens column with parsed values in df
-    df['num_ens'] = df[b'info:codi'].apply(lambda x: decode_hbase(x).zfill(5))
+    for data in get_hbase_data_batch(hbase_conn, supplies_table, batch_size=100000):
+        print("starting")
+        supplies = []
+        for cups, data1 in data:
+            data1.update({"cups": cups})
+            supplies.append(data1)
+        supplies_df = pd.DataFrame.from_records(supplies)
+        if supplies_df.empty:
+            continue
+        supplies_df['decoded_cups'] = supplies_df.cups.apply(bytes.decode)
+        supplies_df['NumEns'] = supplies_df.decoded_cups.apply(lambda x: cups_bcode[x] if x in cups_bcode else None)
+        linked_supplies = supplies_df[supplies_df["NumEns"].isna()==False]
+        unlinked_supplies = supplies_df[supplies_df["NumEns"].isna()]
+        for linked, df in [("linked", linked_supplies), ("unlinked", unlinked_supplies)]:
+            for group, supply_by_group in df.groupby(b"info:nif"):
+                print(f"generating_rdf for {group}, {linked},{len(supply_by_group)}")
+                if supply_by_group.empty:
+                    continue
+                with neo.session() as ses:
+                    datadis_source = ses.run(
+                        f"""Match (n: DatadisSource{{username:"{group.decode()}"}}) return n""").single()
+                    datadis_source = datadis_source.get("n").id
+                print("generating rdf")
+                g = generate_rdf(get_mappings(linked), supply_by_group)
+                print("saving to neo4j")
+                save_rdf_with_source(g, source, neo4j_connection)
+                print("linking with source")
+                link_devices_with_source(g, datadis_source, neo4j_connection)
 
-    # get all devices with linked buildings
-    df_linked = df[df['num_ens'].isin([str(i) for i in ids_ens])]
-
-    g = generate_rdf(get_mappings("linked"), df_linked)
-    save_rdf_with_source(g, source, neo4j_connection)
-
-    # link devices from G to the source
-    link_devices_with_source(g, source_id, neo4j_connection)
-
-    df_unlinked = df[df['num_ens'].isin([str(i) for i in ids_ens]) == False]
-    g2 = generate_rdf(get_mappings("unlinked"), df_unlinked)
-    save_rdf_with_source(g2, source, neo4j_connection)
-    link_devices_with_source(g2, source_id, neo4j_connection)
 
 def time_series_mapping(args, source, hbase_conf, hbase_conf2, neo4j_connection):
     neo = GraphDatabase.driver(**neo4j_connection)
@@ -89,7 +76,7 @@ def time_series_mapping(args, source, hbase_conf, hbase_conf2, neo4j_connection)
             for htable_name in ts_tables:
                 freq = htable_name.decode().split("_")[2]
                 user = htable_name.decode().split("_")[3]
-                prefix = (device_id+'~').encode("utf-8")
+                prefix = (device_id + '~').encode("utf-8")
                 list_id = f"{device_id}-LIST-RAW-{freq}-{source}"
                 list_uri = f"{parsed.scheme}://{parsed.netloc}/#{list_id}"
                 new_d_id = hashlib.sha256(parsed.fragment.encode("utf-8"))
@@ -140,9 +127,9 @@ def time_series_mapping(args, source, hbase_conf, hbase_conf2, neo4j_connection)
                     batch.send()
 
 
-source = "gemweb"
+source = "datadis"
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Mapping of Gemweb data to neo4j.')
+    parser = argparse.ArgumentParser(description='Mapping of Datadis data to neo4j.')
     main_org_params = parser.add_argument_group("Organization",
                                                 "Set the main organization information for importing the data")
     main_org_params.add_argument("--organization_name", "-name", help="The main organization name", required=True)
@@ -170,5 +157,4 @@ if __name__ == "__main__":
         static_mapping(args, source, hbase_conn, neo4j_connection)
     elif args.type == "ts":
         time_series_mapping(args, source, hbase_conn, hbase_conn2, neo4j_connection)
-    else:
-        raise(NotImplementedError("invalid type: [static, ts]"))
+

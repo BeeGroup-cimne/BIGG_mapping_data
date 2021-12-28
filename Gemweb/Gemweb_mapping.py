@@ -1,7 +1,7 @@
 from Gemweb.transform_functions import ref_cadastral
 from rdf_utils.bigg_definition import Bigg
 from rdf_utils.big_classes import Organization, Building, LocationInfo, CadastralInfo, BuildingSpace, Area, Device, \
-    BuildingConstructionElement, MeasurementList, BIGGObjects
+    BuildingConstructionElement, MeasurementList, BIGGObjects, UtilityPointOfDelivery
 from slugify import slugify as slugify
 from utils import *
 
@@ -23,29 +23,10 @@ def set_params(organization, s, namespace):
     BuildingConstructionElement.set_namespace(namespace)
     Device.set_namespace(namespace)
     MeasurementList.set_namespace(namespace)
-    Gemweb_source.set_namespace(namespace)
-
-
-class Gemweb_source(BIGGObjects):
-    __rdf_type__ = Bigg.GemwebSource
-
-    def __init__(self, subject):
-        super().__init__(subject)
+    UtilityPointOfDelivery.set_namespace(namespace)
 
 
 def get_mappings(group):
-    gemweb_link = {
-        "name": "gemweb_link",
-        "class": Gemweb_source,
-        "type": {
-            "origin": "static",
-        },
-        "params": {
-            "raw": {
-                "subject": slugify(f"Gemweb {ORGANIZATION_MAIN}"),
-            }
-        }
-    }
 
     main_organization = {
         "name": "main_organization",
@@ -212,6 +193,10 @@ def get_mappings(group):
             "device": {
                 "type": Bigg.isObservedBy,
                 "link": "dev_gem_id"
+            },
+            "utility_point": {
+                "type": Bigg.hasUtilityPointOfDelivery,
+                "link": "dev_gem_id"
             }
         }
     }
@@ -259,6 +244,35 @@ def get_mappings(group):
         }
     }
 
+    utility_point = {
+        "name": "utility_point",
+        "class": UtilityPointOfDelivery,
+        "type": {
+            "origin": "row"
+        },
+        "params": {
+            "mapping": {
+                "subject": {
+                    "key": b'info:cups',
+                    "operations": [decode_hbase, delivery_subject]
+                },
+                "pointOfDeliveryIDFromUser": {
+                    "key": b'info:cups',
+                    "operations": [decode_hbase, ]
+                },
+                "utilityType": {
+                    "key": b'info:tipus_submin',
+                    "operations": [decode_hbase, ]
+                }
+            }
+        },
+        "links": {
+            "device": {
+                "type": Bigg.hasDevice,
+                "link": "dev_gem_id"
+            }
+        }
+    }
     device = {
         "name": "device",
         "class": Device,
@@ -280,22 +294,12 @@ def get_mappings(group):
                     "operations": [decode_hbase, ]
                 }
             }
-        },
-        "links": {
-            "gemweb_link": {
-                "type": Bigg.importedFromSource,
-                "link": "__all__"
-            },
-            "measures_list": {
-                "type": Bigg.hasMeasurementLists,
-                "link": "dev_gem_id"
-            }
         }
     }
 
     grouped_modules = {
-        "linked": [gemweb_link, main_organization, building, location_info, cadastral_info, building_space,
-                   gross_floor_area, building_element, device],
-        "unlinked": [gemweb_link, main_organization, device]
+        "linked": [main_organization, building, location_info, cadastral_info, building_space,
+                   gross_floor_area, building_element, device, utility_point],
+        "unlinked": [device]
     }
     return grouped_modules[group]

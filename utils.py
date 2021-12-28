@@ -1,8 +1,10 @@
+import json
 import re
 from functools import partial
 from urllib.parse import urlparse
 import happybase
 import rdflib
+from kafka import KafkaConsumer, KafkaProducer
 from neo4j import GraphDatabase
 from rdflib import Graph, RDF
 from rdf_utils.bigg_definition import Bigg
@@ -12,14 +14,16 @@ from Crypto.Cipher import AES
 from Crypto import Random
 import os
 
-
 multi_value_classes = [Bigg.LocationInfo, Bigg.CadastralInfo, Bigg.Building, Bigg.BuildingSpace]
 
 
 def decode_hbase(value):
-    if value is not None:
+    if value is None:
+        return ""
+    elif isinstance(value, bytes):
         return value.decode()
-    return ""
+    else:
+        return str(value)
 
 
 def join_params(args, joiner='~'):
@@ -69,6 +73,8 @@ def eem_subject(key):
 def device_subject(key, source):
     return f"{source}-DEVICE-{key}"
 
+def delivery_subject(key):
+    return f"SUPPLY-{key}"
 
 def device_raw_measure_subject(key, source):
     return f"{source}-DEVICE-RAW-{key}"
@@ -99,6 +105,8 @@ def save_rdf_with_source(graph, source, connection):
         multi_value_subjects[class_] = list(set(graph.subjects(RDF.type, class_)))
     g2 = Graph()
     for class_, list_ in multi_value_subjects.items():
+        if not list_:
+            continue
         # get and parse the elements existing in DB
         parsed_type = urlparse(class_)
         with neo.session() as session:
@@ -131,6 +139,27 @@ def save_rdf_with_source(graph, source, connection):
     with neo.session() as session:
         tty = __neo4j_import__(session, v)
         print(tty)
+
+
+def link_devices_with_source(g, source_id, neo4j_connection):
+    query_devices = """
+               PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+               PREFIX bigg:<http://example/BiggOntology#>
+               SELECT DISTINCT ?sub
+               WHERE {
+                   ?sub rdf:type bigg:Device .
+               }    
+            """
+    r_devices = g.query(query_devices)
+    neo = GraphDatabase.driver(**neo4j_connection)
+    with neo.session() as session:
+        for subject in r_devices:
+            session.run(
+                f"""
+                    MATCH (source) WHERE id(source)={source_id}
+                    MATCH (device) WHERE device.uri="{str(subject[0])}"
+                    Merge (source)<-[:ns0__importedFromSource]-(device)
+                    RETURN device""")
 
 
 def get_hbase_data_batch(hbase_conf, hbase_table, row_start=None, row_stop=None, row_prefix=None, columns=None,
@@ -235,3 +264,49 @@ def decrypt(enc_dict, password):
     original = un_pad(decrypted)
 
     return original
+
+
+def read_from_kafka(topic, config):
+    kafka_servers = [f"{host}:{port}" for host, port in zip(config['hosts'], config['ports'])]
+    consumer = KafkaConsumer(topic, bootstrap_servers=kafka_servers,
+                             value_deserializer=lambda v: json.loads(v.decode("utf-8")))
+    for m in consumer:
+        yield m
+        
+# def read_from_kafka(topic, config):
+#     kafka_servers = [f"{host}:{port}" for host, port in zip(config['hosts'], config['ports'])]
+#     consumer = KafkaConsumer(topic, bootstrap_servers=kafka_servers,
+#                              key_deserializer=lambda v: v.decode('utf-8'),
+#                              value_deserializer=lambda v: json.loads(v.decode("utf-8")))
+#     producer = KafkaProducer(bootstrap_servers=kafka_servers,
+#                              value_serializer=lambda v: json.dumps(v).encode('utf-8'),
+#                              key_serializer=lambda v: v.encode('utf-8'),
+#                              compression_type='gzip')
+#
+#     for m in consumer:
+#         data_read = []
+#         message_id = m.key
+#         print(f"received  message_id: {message_id}")
+#         while True:
+#             meta_message = m.value
+#             if meta_message['message_type'] == "meta":
+#                 message = meta_message
+#                 message['data'] = []
+#                 data_read.append(message)
+#                 tmp_mess = None
+#                 for m in consumer:
+#                     if m.key != message_id:
+#                         # if it is from another message_id, add it to the end of the kafka topic
+#                         f = producer.send(topic, key=m.key, value=m.value)
+#                         continue
+#                     tmp_mess = m.value
+#                     if tmp_mess['message_type'] == "data":
+#                         message['data'].extend(tmp_mess['data'])
+#                     else:
+#                         break
+#                 if tmp_mess and tmp_mess['message_type'] == "end":
+#                     yield data_read
+#                     break
+#             else:
+#                 print("message without meta")
+#                 break

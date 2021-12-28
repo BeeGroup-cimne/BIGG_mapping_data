@@ -1,32 +1,17 @@
-import happybase
-# This is a sample Python script.
+import json
 
-# Press ⇧F10 to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
+import pandas as pd
 
-# AES 256 encryption/decryption using pycrypto library
+import GPG.__main__
+from utils import read_from_kafka
 
-
-def main():
-    password = "3Ú3Tx9MYKYZMQ´qg"
-
-    # First let us encrypt secret message
-    message = input("FRANCESC CONTRERAS PASSWORD: ")
-    encrypted = encrypt(message, password)
-    print(encrypted)
-
-    # Let us decrypt using our original password
-    decrypted = decrypt(encrypted, password)
-    print(bytes.decode(decrypted))
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print_hi('PyCharm')
+    with open("config.json") as f:
+        config = json.load(f)
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    for x in read_from_kafka('harmonize-raw-data', config['kafka']):
+        message = x.value
+        if message['source'] == "gpg":
+            df = pd.DataFrame.from_records(message['data'])
+            GPG.__main__.map_data(message['data'], message['organization_name'], message['namespace'],
+                                  message['user'], False)

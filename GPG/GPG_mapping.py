@@ -46,7 +46,7 @@ def get_mappings(group):
             "origin": "row_split_column",
             "operations": [decode_hbase, ],
             "sep": ";",
-            "column": b'info:Departament_Assig_Adscrip',
+            "column": "Departament_Assig_Adscrip",
             "column_mapping": {
                 "subject": [clean_department, slugify],
             }
@@ -87,7 +87,7 @@ def get_mappings(group):
                     "operations": [decode_hbase, id_zfill, building_department_subject]
                 },
                 "organizationName": {
-                    "key": b'info:Espai',
+                    "key": "Espai",
                     "operations": [decode_hbase, ]
                 }
             }
@@ -125,11 +125,11 @@ def get_mappings(group):
                     "operations": [decode_hbase, id_zfill]
                 },
                 "buildingName": {
-                    "key": b'info:Espai',
+                    "key": "Espai",
                     "operations": [decode_hbase, ]
                 },
                 "buildingUseType": {
-                    "key": b'info:Tipus_us',
+                    "key": "Tipus_us",
                     "operations": [decode_hbase, building_type_taxonomy]
                 }
             }
@@ -170,23 +170,23 @@ def get_mappings(group):
                     "operations": [decode_hbase, id_zfill,  location_info_subject]
                 },
                 "addressProvince": {
-                    "key": b'info:Provincia',
+                    "key": "Provincia",
                     "operations": [decode_hbase, ]
                 },
                 "addressCity": {
-                    "key": b'info:Municipi',
+                    "key": "Municipi",
                     "operations": [decode_hbase, ]
                 },
                 "addressPostalCode": {
-                    "key": b'info:Codi_postal',
+                    "key": "Codi_postal",
                     "operations": [decode_hbase, ]
                 },
                 "addressStreetNumber": {
-                    "key": b'info:Num_via',
+                    "key": "Num_via",
                     "operations": [decode_hbase, ]
                 },
                 "addressStreetName": {
-                    "key": b'info:Via',
+                    "key": "Via",
                     "operations": [decode_hbase, ]
                 }
             }
@@ -201,7 +201,7 @@ def get_mappings(group):
             "origin": "row_split_column",
             "operations": [decode_hbase, validate_ref_cadastral],
             "sep": ";",
-            "column": b'info:Ref_Cadastral',
+            "column": "Ref_Cadastral",
             "column_mapping": {
                 "subject": [str.strip],
                 "landCadastralReference": [str.strip]
@@ -214,11 +214,11 @@ def get_mappings(group):
             },
             "mapping": {
                 "landArea": {
-                    "key": b'info:Sup_terreny',
+                    "key": "Sup_terreny",
                     "operations": [decode_hbase, ]
                 },
                 "landType": {
-                    "key": b'info:Classificacio_sol',
+                    "key": "Classificacio_sol",
                     "operations": [decode_hbase, ]
                 }
             }
@@ -241,7 +241,7 @@ def get_mappings(group):
                     "operations": [decode_hbase, id_zfill,  building_space_subject]
                 },
                 "buildingSpaceUseType": {
-                    "key": b'info:Tipus_us',
+                    "key": "Tipus_us",
                     "operations": [decode_hbase, building_type_taxonomy]
                 }
             }
@@ -283,7 +283,7 @@ def get_mappings(group):
                     "operations": [decode_hbase,  id_zfill, partial(gross_area_subject, a_source=source)]
                 },
                 "areaValue": {
-                    "key": b'info:Sup_const_total',
+                    "key": "Sup_const_total",
                     "operations": [decode_hbase, ]
                 }
             }
@@ -307,7 +307,7 @@ def get_mappings(group):
                     "operations": [decode_hbase, id_zfill, partial(gross_area_subject_above, a_source=source)]
                 },
                 "areaValue": {
-                    "key": b'info:Sup_const_sobre_rasant',
+                    "key": "Sup_const_sobre_rasant",
                     "operations": [decode_hbase, ]
                 }
             }
@@ -331,7 +331,7 @@ def get_mappings(group):
                     "operations": [decode_hbase, id_zfill, partial(gross_area_subject_under, a_source=source)]
                 },
                 "areaValue": {
-                    "key": b'info:Sup_const_sota rasant',
+                    "key": "Sup_const_sota rasant",
                     "operations": [decode_hbase, ]
                 }
             }

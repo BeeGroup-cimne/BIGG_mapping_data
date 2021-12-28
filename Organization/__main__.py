@@ -1,5 +1,8 @@
 import argparse
 import json
+import os
+
+import rdflib
 from rdflib import Namespace, Graph
 from Organization.organization_mapping import *
 import pandas as pd
@@ -9,7 +12,6 @@ from rdf_utils.rdf_functions import generate_rdf
 from utils import save_rdf_with_source
 
 source = "Org"
-#args_t = ["-f", "Organization/data/organizations.xls", "-name", "Generalitat de Catalunya", "-n", "http://data.icaen.cat#", "-u", "icaen"]
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Mapping of Organization data to neo4j.')
@@ -21,8 +23,12 @@ if __name__ == "__main__":
     main_org_params.add_argument("--organization_name", "-name", help="The main organization name", required=True)
     main_org_params.add_argument("--user", "-u", help="The main organization name", required=True)
     main_org_params.add_argument("--namespace", "-n", help="The subjects namespace uri", required=True)
-
-    args = parser.parse_args()
+    if os.getenv("PYCHARM_HOSTED"):
+        args_t = ["-f", "Organization/data/organizations.xls", "-name", "Generalitat de Catalunya", "-n",
+                  "http://icaen.cat#", "-u", "icaen"]
+        args = parser.parse_args(args_t)
+    else:
+        args = parser.parse_args()
     # read config file
     with open("./config.json") as config_f:
         config = json.load(config_f)
@@ -41,7 +47,6 @@ if __name__ == "__main__":
 
     print("mapping data")
     # generate main org
-    g = generate_rdf(get_mappings("main"), pd.DataFrame())
 
     g_levels = []
     for dfl in org_levels_df:
@@ -49,19 +54,16 @@ if __name__ == "__main__":
 
     # Create links between graph
     total_g = Graph()
-    total_g += g
     for index, dfs in enumerate(org_levels_df):
         if index == 0:
             parent_df = None
-            parent = args.organization_name
+            for _, org in dfs.iterrows():
+                total_g.add((n[slugify(org['name'])], Bigg["userId"], rdflib.Literal(args.user)))
         else:
-            parent = None
             parent_df = org_levels_df[index - 1]
         total_g += g_levels[index]
         for x, row in dfs.iterrows():
-            if parent:
-                total_g.add((n[slugify(parent)], Bigg.hasSubOrganization, n[slugify(row["name"])]))
-            else:
+            if parent_df is not None:
                 r_parent = parent_df[parent_df.id == row.link]
                 total_g.add((n[slugify(r_parent['name'].values[0])], Bigg.hasSubOrganization, n[slugify(row["name"])]))
 

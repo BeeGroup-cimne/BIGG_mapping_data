@@ -69,6 +69,8 @@ class Bigg(DefinedNamespace):
     observesElements: URIRef
     isAssociatedWithElements: URIRef
     containsElement: URIRef
+    hasUtilityPointOfDelivery: URIRef
+
 
     Area: URIRef
     areaType: URIRef
@@ -98,7 +100,6 @@ class Bigg(DefinedNamespace):
     deviceLicenseVersionNumber: URIRef
     deviceInputSignalType: URIRef
     inputProtocol: URIRef
-    hasUtilityPointOfDelivery: URIRef
     observesSpaces: URIRef
     observesElements: URIRef
     isPartOfModelingUnit: URIRef
@@ -114,8 +115,9 @@ class Bigg(DefinedNamespace):
     isObservedBy: URIRef
 
     UtilityPointOfDelivery: URIRef
-    pointOfDeliveryIDfromUser: URIRef
+    pointOfDeliveryIDFromUser: URIRef
     utilityType: URIRef
+    hasDevice: URIRef
 
     DeviceAggregator: URIRef
     deviceAggregatorFormula: URIRef

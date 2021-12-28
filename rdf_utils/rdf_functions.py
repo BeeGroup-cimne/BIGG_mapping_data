@@ -107,8 +107,14 @@ def __mapping_params__(params, row):
             else:
                 if v['key'] in row:
                     value = row[v['key']]
-                    if not value or value == b'nan' or pd.isna(value):
+                    if value is None or value == b'nan':
                         continue
+                    if isinstance(value, list):
+                        if all(pd.isna(value)):
+                            continue
+                    else:
+                        if pd.isna(value):
+                            continue
                     for func in v['operations']:
                         value = func(value)
                     mapping_dict[k] = value
