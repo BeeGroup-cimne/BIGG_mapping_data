@@ -1,5 +1,7 @@
 import json
 import re
+import time
+import uuid
 from functools import partial
 from urllib.parse import urlparse
 import happybase
@@ -162,6 +164,45 @@ def link_devices_with_source(g, source_id, neo4j_connection):
                     RETURN device""")
 
 
+def __get_h_table__(hbase, table_name, cf=None):
+    try:
+        if not cf:
+            cf = {"cf": {}}
+        hbase.create_table(table_name, cf)
+    except Exception as e:
+        if str(e.__class__) == "<class 'Hbase_thrift.AlreadyExists'>":
+            pass
+        else:
+            print(e)
+    return hbase.table(table_name)
+
+
+def save_to_hbase(documents, h_table_name, hbase_connection, cf_mapping, row_fields=None,
+                  version=int(time.time()), batch_size=1000):
+    hbase = happybase.Connection(**hbase_connection)
+    table = __get_h_table__(hbase, h_table_name, {cf: {} for cf, _ in cf_mapping})
+    h_batch = table.batch(timestamp=version, batch_size=batch_size)
+    row_auto = 0
+    uid = uuid.uuid4()
+    for d in documents:
+        if not row_fields:
+            row = f"{uid}~{row_auto}"
+            row_auto += 1
+        else:
+            row = "~".join([str(d.pop(f)) if f in d else "" for f in row_fields])
+        values = {}
+        for cf, fields in cf_mapping:
+            if fields == "all":
+                for c, v in d.items():
+                    values["{cf}:{c}".format(cf=cf, c=c)] = str(v)
+            else:
+                for c in fields:
+                    if c in d:
+                        values["{cf}:{c}".format(cf=cf, c=c)] = str(d[c])
+        h_batch.put(str(row), values)
+    h_batch.send()
+
+
 def get_hbase_data_batch(hbase_conf, hbase_table, row_start=None, row_stop=None, row_prefix=None, columns=None,
                          _filter=None, timestamp=None, include_timestamp=False, batch_size=100000,
                          scan_batching=None, limit=None, sorted_columns=False, reverse=False):
@@ -266,9 +307,9 @@ def decrypt(enc_dict, password):
     return original
 
 
-def read_from_kafka(topic, config):
+def read_from_kafka(topic, group_id, config):
     kafka_servers = [f"{host}:{port}" for host, port in zip(config['hosts'], config['ports'])]
-    consumer = KafkaConsumer(topic, bootstrap_servers=kafka_servers,
+    consumer = KafkaConsumer(topic, bootstrap_servers=kafka_servers, group_id=group_id,
                              value_deserializer=lambda v: json.loads(v.decode("utf-8")))
     for m in consumer:
         yield m

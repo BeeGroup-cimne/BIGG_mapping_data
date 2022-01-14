@@ -27,7 +27,7 @@ def get_mappings(group):
         "params": {
             "mapping": {
                 "subject": {
-                    "key": b'info:building_CodeEns_GPG',
+                    "key": 'building_CodeEns_GPG',
                     "operations": [decode_hbase, get_code_ens, id_zfill, construction_element_subject]
                 }
             }
@@ -55,7 +55,7 @@ def get_mappings(group):
                 "subject": {
                     "key": [
                         {
-                            "key": b'info:building_CodeEns_GPG',
+                            "key": 'building_CodeEns_GPG',
                             "operations": [decode_hbase, get_code_ens, id_zfill]},
                         {
                             "key": "id_",
@@ -67,37 +67,37 @@ def get_mappings(group):
                 "energyEfficiencyMeasureType": {
                     "key": [
                         {
-                            "key": b'info:improvement_type_level1',
+                            "key": 'improvement_type_level1',
                             "operations": [decode_hbase]},
                         {
-                            "key": b'info:improvement_type_level2',
+                            "key": 'improvement_type_level2',
                             "operations": [decode_hbase]
                         },
                         {
-                            "key": b'info:improvement_type_level3',
+                            "key": 'improvement_type_level3',
                             "operations": [decode_hbase]
                         },
                         {
-                            "key": b'info:improvement_type_level4',
+                            "key": 'improvement_type_level4',
                             "operations": [decode_hbase]
                         },
                     ],
                     "operations": [partial(join_params, joiner=".")]
                 },
                 "energyEfficiencyMeasureDescription": {
-                    "key": b'info:description',
+                    "key": 'description',
                     "operations": [decode_hbase]
                 },
                 "shareOfAffectedElement": {
-                    "key": b'info:improvement_percentage',
+                    "key": 'improvement_percentage',
                     "operations": [decode_hbase]
                 },
                 "energyEfficiencyMeasureOperationalDate": {
-                    "key": b'info:Data de finalitzaci\xc3\xb3 de l obra / millora',
+                    "key": 'Data de finalitzaci\xc3\xb3 de l obra / millora',
                     "operations": [decode_hbase]
                 },
                 "energyEfficiencyMeasureInvestment": {
-                    "key": b'info:investment_without_tax',
+                    "key": 'investment_without_tax',
                     "operations": [decode_hbase]
                 }
 

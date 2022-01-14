@@ -58,23 +58,23 @@ def get_mappings(group):
         "params": {
             "mapping": {
                 "subject": {
-                    "key": b'info:codi',
+                    "key": "codi",
                     "operations": [decode_hbase, id_zfill, building_subject]
                 },
                 "buildingIDFromOrganization": {
-                    "key": b'info:codi',
+                    "key": "codi",
                     "operations": [decode_hbase, id_zfill]
                 },
                 "buildingName": {
-                    "key": b'info:nom',
+                    "key": "nom",
                     "operations": [decode_hbase, ]
                 },
                 "buildingUseType": {
-                    "key": b'info:subtipus',
+                    "key": "subtipus",
                     "operations": [decode_hbase]#, building_type_taxonomy]
                 },
                 "buildingOwnership": {
-                    "key": b'info:responsable',
+                    "key": "responsable",
                     "operations": [decode_hbase]
                 },
             }
@@ -104,35 +104,35 @@ def get_mappings(group):
         "params": {
             "mapping": {
                 "subject": {
-                    "key": b'info:codi',
+                    "key": "codi",
                     "operations": [decode_hbase, id_zfill, location_info_subject]
                 },
                 "addressCountry": {
-                    "key": b'info:pais',
+                    "key": "pais",
                     "operations": [decode_hbase]
                 },
                 "addressProvince": {
-                    "key": b'info:provincia',
+                    "key": "provincia",
                     "operations": [decode_hbase, ]
                 },
                 "addressCity": {
-                    "key": b'info:poblacio',
+                    "key": "poblacio",
                     "operations": [decode_hbase, ]
                 },
                 "addressPostalCode": {
-                    "key": b'info:codi_postal',
+                    "key": "codi_postal",
                     "operations": [decode_hbase, ]
                 },
                 "addressStreetName": {
-                    "key": b'info:direccio',
+                    "key": "direccio",
                     "operations": [decode_hbase, ]
                 },
                 "addressLongitude": {
-                    "key": b'info:longitud',
+                    "key": "longitud",
                     "operations": [decode_hbase, ]
                 },
                 "addressLatitude": {
-                    "key": b'info:latitud',
+                    "key": "latitud",
                     "operations": [decode_hbase, ]
                 }
             }
@@ -146,7 +146,7 @@ def get_mappings(group):
             "origin": "row_split_column",
             "operations": [decode_hbase, ref_cadastral, validate_ref_cadastral],
             "sep": ";",
-            "column": "b'info:observacions'building",
+            "column": "observacionsbuilding",
             "column_mapping": {
                 "subject": [str.strip],
                 "landCadastralReference": [str.strip]
@@ -172,11 +172,11 @@ def get_mappings(group):
             },
             "mapping": {
                 "subject": {
-                    "key": b'info:codi',
+                    "key": "codi",
                     "operations": [decode_hbase, id_zfill, slugify, building_space_subject, ]
                 },
                 "buildingSpaceUseType": {
-                    "key": b'info:subtipus',
+                    "key": "subtipus",
                     "operations": [decode_hbase]  # , building_type_taxonomy]
                 }
             }
@@ -214,11 +214,11 @@ def get_mappings(group):
             },
             "mapping": {
                 "subject": {
-                    "key": b'info:codi',
+                    "key": "codi",
                     "operations": [decode_hbase, id_zfill, partial(gross_area_subject, a_source=source)]
                 },
                 "areaValue": {
-                    "key": b'info:superficie',
+                    "key": "superficie",
                     "operations": [decode_hbase, ]
                 }
             }
@@ -237,7 +237,7 @@ def get_mappings(group):
             },
             "mapping": {
                 "subject": {
-                    "key": b'info:codi',
+                    "key": "codi",
                     "operations": [decode_hbase, id_zfill, construction_element_subject]
                 }
             }
@@ -253,15 +253,15 @@ def get_mappings(group):
         "params": {
             "mapping": {
                 "subject": {
-                    "key": b'info:cups',
+                    "key": "cups",
                     "operations": [decode_hbase, delivery_subject]
                 },
                 "pointOfDeliveryIDFromUser": {
-                    "key": b'info:cups',
+                    "key": "cups",
                     "operations": [decode_hbase, ]
                 },
                 "utilityType": {
-                    "key": b'info:tipus_submin',
+                    "key": "tipus_submin",
                     "operations": [decode_hbase, ]
                 }
             }
@@ -286,11 +286,11 @@ def get_mappings(group):
                     "operations": [decode_hbase, partial(device_subject, source)]
                 },
                 "deviceName":  {
-                    "key": b'info:cups',
+                    "key": "cups",
                     "operations": [decode_hbase, ]
                 },
                 "deviceType":  {
-                    "key": b'info:tipus_submin',
+                    "key": "tipus_submin",
                     "operations": [decode_hbase, ]
                 }
             }

@@ -34,19 +34,19 @@ def get_mappings(group):
                     "operations": [id_zfill, location_info_subject]
                 },
                 "addressProvince": {
-                    "key": b'info:province',
+                    "key": 'province',
                     "operations": [decode_hbase, ]
                 },
                 "addressCity": {
-                    "key": b'info:municipality',
+                    "key": 'municipality',
                     "operations": [decode_hbase, ]
                 },
                 "addressPostalCode": {
-                    "key":  b'info:postalCode',
+                    "key":  'postalCode',
                     "operations": [decode_hbase, ]
                 },
                 "addressStreetName": {
-                    "key": b'info:address',
+                    "key": 'address',
                     "operations": [decode_hbase, ]
                 }
             }

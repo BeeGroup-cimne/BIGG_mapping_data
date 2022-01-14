@@ -20,15 +20,15 @@ if __name__ == "__main__":
 
     with open("./config.json") as config_f:
         config = json.load(config_f)
+        config['neo4j']['auth'] = tuple(config['neo4j']['auth'])
 
     if os.getenv("PYCHARM_HOSTED"):
         args_t = ["-f", "DataSources/data/gemweb.xls", "-name", "Generalitat de Catalunya", "-n", "http://icaen.cat#", "-d", "GemwebSource"]
         args = parser.parse_args(args_t)
     else:
         args = parser.parse_args()
-    neo4j_connection = {"uri": config['neo4j']['uri'],
-                        "auth": (config['neo4j']['username'], config['neo4j']['password'])}
-    neo = GraphDatabase.driver(**neo4j_connection)
+
+    neo = GraphDatabase.driver(**config['neo4j'])
     df = pd.read_excel(args.file)
     df['Password_enc'] = df['Password'].apply(partial(encrypt, password=os.getenv(config['encript_pass']['environment'])))
     with neo.session() as s:

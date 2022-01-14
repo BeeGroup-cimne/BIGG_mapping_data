@@ -32,6 +32,7 @@ if __name__ == "__main__":
     # read config file
     with open("./config.json") as config_f:
         config = json.load(config_f)
+        config['neo4j']['auth'] = tuple(config['neo4j']['auth'])
 
     org_levels_df = []
     level = 0
@@ -67,6 +68,5 @@ if __name__ == "__main__":
                 r_parent = parent_df[parent_df.id == row.link]
                 total_g.add((n[slugify(r_parent['name'].values[0])], Bigg.hasSubOrganization, n[slugify(row["name"])]))
 
-    neo4j_connection = {"uri": config['neo4j']['uri'], "auth": (config['neo4j']['username'], config['neo4j']['password'])}
     print("saving to node4j")
-    save_rdf_with_source(total_g, source, neo4j_connection)
+    save_rdf_with_source(total_g, source, config['neo4j'])
