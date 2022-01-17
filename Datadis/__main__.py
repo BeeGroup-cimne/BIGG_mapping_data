@@ -1,3 +1,4 @@
+import settings
 import argparse
 from Datadis.Datadis_mapping import *
 from Datadis.mapper_static import map_data as map_data_static
@@ -19,10 +20,8 @@ if __name__ == "__main__":
     else:
         args = parser.parse_args()
     # read config file
-    with open("./config.json") as config_f:
-        config = json.load(config_f)
-        config['neo4j']['auth'] = tuple(config['neo4j']['auth'])
-    hbase_conn = config['hbase']
+    config = read_config(settings.conf_file)
+    hbase_conn = config['hbase_imported_data']
 
     if args.type == "static":
         supplies_table = f"{source}_supplies_{args.user}".lower()

@@ -2,8 +2,11 @@ import argparse
 import json
 import os
 import re
+
+import settings
 from GPG.mapper_static import map_data
-from utils import get_hbase_data_batch
+from utils import get_hbase_data_batch, read_config
+
 source = "GPG"
 
 if __name__ == "__main__":
@@ -14,7 +17,7 @@ if __name__ == "__main__":
     main_org_params = parser.add_argument_group("Organization",
                                                 "Set the main organization information for importing the data")
     main_org_params.add_argument("--organization_name", "-name", help="The main organization name", required=True)
-    main_org_params.add_argument("--user", "-u", help="The main organization name", required=True)
+    main_org_params.add_argument("--user", "-u", help="The user importing the data", required=True)
     main_org_params.add_argument("--namespace", "-n", help="The subjects namespace uri", required=True)
     if os.getenv("PYCHARM_HOSTED"):
         args_t = ["-name", "Generalitat de Catalunya", "-n", "http://icaen.cat#", "-u", "icaen", "-o"]
@@ -22,11 +25,10 @@ if __name__ == "__main__":
     else:
         args = parser.parse_args()
     # read config file
-    with open("./config.json") as config_f:
-        config = json.load(config_f)
-        config['neo4j']['auth'] = tuple(config['neo4j']['auth'])
+    config = read_config(settings.conf_file)
 
-    hbase_conn = config['hbase']
+
+    hbase_conn = config['hbase_imported_data']
     hbase_table = f"{source}_buildings_{args.user}"
     for data in get_hbase_data_batch(hbase_conn, hbase_table):
         dic_list = []

@@ -20,7 +20,7 @@ def map_data(data, **kwargs):
     user = kwargs['user']
     config = kwargs['config']
     source = kwargs['source']
-    hbase_conn2 = config['hbase_bigg']
+    hbase_conn2 = config['hbase_harmonized_data']
     neo4j_connection = config['neo4j']
 
     neo = GraphDatabase.driver(**neo4j_connection)

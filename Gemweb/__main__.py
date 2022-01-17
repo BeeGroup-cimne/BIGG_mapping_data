@@ -10,10 +10,10 @@ import pandas as pd
 import os
 from rdflib import Namespace
 
+import settings
 from Gemweb.mapper_static import map_data as map_data_static
 from Gemweb.mapper_ts import map_data as map_data_ts
-from utils import get_hbase_data_batch
-
+from utils import get_hbase_data_batch, read_config
 
 source = "gemweb"
 if __name__ == "__main__":
@@ -31,11 +31,10 @@ if __name__ == "__main__":
     else:
         args = parser.parse_args()
     # read config file
-    with open("./config.json") as config_f:
-        config = json.load(config_f)
-        config['neo4j']['auth'] = tuple(config['neo4j']['auth'])
+    config = read_config(settings.conf_file)
 
-    hbase_conn = config['hbase']
+
+    hbase_conn = config['hbase_imported_data']
 
     if args.type == "static":
         # get supplies from HBASE

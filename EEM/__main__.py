@@ -7,11 +7,13 @@ from rdflib import Namespace
 import happybase
 import pandas as pd
 import os
+
+import settings
 from EEM.EEM_mapping import set_params, get_mappings
 from EEM.mapper import map_data
 from EEM.transform_functions import get_code_ens
 from rdf_utils.rdf_functions import generate_rdf
-from utils import save_rdf_with_source, decode_hbase, id_zfill, get_hbase_data_batch
+from utils import save_rdf_with_source, decode_hbase, id_zfill, get_hbase_data_batch, read_config
 
 from fuzzywuzzy import process
 
@@ -31,11 +33,10 @@ if __name__ == "__main__":
     else:
         args = parser.parse_args()
     # read config file
-    with open("./config.json") as config_f:
-        config = json.load(config_f)
-        config['neo4j']['auth'] = tuple(config['neo4j']['auth'])
+    config = read_config(settings.conf_file)
 
-    hbase_conn = config['hbase']
+
+    hbase_conn = config['hbase_imported_data']
 
     hbase_table = f"{source}_eem_{args.user}"
     hbase = happybase.Connection(**hbase_conn)

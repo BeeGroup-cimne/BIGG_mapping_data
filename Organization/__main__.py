@@ -4,12 +4,14 @@ import os
 
 import rdflib
 from rdflib import Namespace, Graph
+
+import settings
 from Organization.organization_mapping import *
 import pandas as pd
 
 from rdf_utils.bigg_definition import Bigg
 from rdf_utils.rdf_functions import generate_rdf
-from utils import save_rdf_with_source
+from utils import save_rdf_with_source, read_config
 
 source = "Org"
 
@@ -30,9 +32,8 @@ if __name__ == "__main__":
     else:
         args = parser.parse_args()
     # read config file
-    with open("./config.json") as config_f:
-        config = json.load(config_f)
-        config['neo4j']['auth'] = tuple(config['neo4j']['auth'])
+    config = read_config(settings.conf_file)
+
 
     org_levels_df = []
     level = 0

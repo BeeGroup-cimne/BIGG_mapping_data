@@ -93,6 +93,13 @@ def validate_ref_cadastral(value):
     return ";".join(valid_ref)
 
 
+def read_config(conf_file):
+    with open(conf_file) as config_f:
+        config = json.load(config_f)
+        config['neo4j']['auth'] = tuple(config['neo4j']['auth'])
+        return config
+
+
 def __neo4j_import__(ses, v):
     f = f"""CALL n10s.rdf.import.inline('{v}','Turtle')"""
     result = ses.run(f)
