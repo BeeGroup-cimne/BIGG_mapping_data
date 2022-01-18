@@ -1,13 +1,16 @@
 import json
+import pickle
 import re
 import time
 import uuid
+from datetime import datetime
 from functools import partial
 from urllib.parse import urlparse
 import happybase
 import rdflib
 from kafka import KafkaConsumer, KafkaProducer
 from neo4j import GraphDatabase
+from pymongo import MongoClient
 from rdflib import Graph, RDF
 from rdf_utils.bigg_definition import Bigg
 import base64
@@ -317,10 +320,70 @@ def decrypt(enc_dict, password):
 def read_from_kafka(topic, group_id, config):
     kafka_servers = [f"{host}:{port}" for host, port in zip(config['hosts'], config['ports'])]
     consumer = KafkaConsumer(topic, bootstrap_servers=kafka_servers, group_id=group_id,
-                             value_deserializer=lambda v: json.loads(v.decode("utf-8")))
+                             value_deserializer=lambda v: pickle.loads(v))
     for m in consumer:
         yield m
-        
+
+
+class mongo_logger(object):
+    mongo_conf = None
+    collection = None
+
+    log_id = None
+    db = None
+    log_type = None
+
+    @staticmethod
+    def __connect__(mongo_conf, collection):
+        mongo_logger.mongo_conf = mongo_conf
+        mongo_logger.collection = collection
+        mongo = mongo_logger.connection_mongo(mongo_logger.mongo_conf)
+        mongo_logger.db = mongo[mongo_logger.collection]
+
+    @staticmethod
+    def create(mongo_conf, collection, log_type,  user):
+        mongo_logger.__connect__(mongo_conf, collection)
+        mongo_logger.log_type = log_type
+        log_document = {
+            "user": user,
+            "logs": {
+                "gather": [],
+                "store": [],
+                "harmonize": []
+            }
+        }
+        mongo_logger.log_id = mongo_logger.db.insert_one(log_document).inserted_id
+
+    @staticmethod
+    def export_log():
+        return {
+            "mongo_conf": mongo_logger.mongo_conf,
+            "collection": mongo_logger.collection,
+            "log_id": mongo_logger.log_id
+        }
+
+    @staticmethod
+    def import_log(exported_info, log_type):
+        mongo_logger.__connect__(exported_info['mongo_conf'], exported_info['collection'])
+        mongo_logger.log_id = exported_info['log_id']
+        mongo_logger.log_type = log_type
+
+    @staticmethod
+    def log(message):
+        if any([mongo_logger.db is None, mongo_logger.db is None, mongo_logger.log_type is None]):
+            return
+        mongo_logger.db.update_one({"_id": mongo_logger.log_id},
+                                   {"$push": {
+                                       f"logs.{mongo_logger.log_type}": f"{datetime.utcnow()}: \
+                                       {message}"}})
+
+    # MongoDB functions
+    @staticmethod
+    def connection_mongo(config):
+        cli = MongoClient("mongodb://{user}:{pwd}@{host}:{port}/{db}".format(**config))
+        db = cli[config['db']]
+        return db
+
 # def read_from_kafka(topic, config):
 #     kafka_servers = [f"{host}:{port}" for host, port in zip(config['hosts'], config['ports'])]
 #     consumer = KafkaConsumer(topic, bootstrap_servers=kafka_servers,

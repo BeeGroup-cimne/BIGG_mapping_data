@@ -20,7 +20,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Mapping of Gemweb data to neo4j.')
     main_org_params = parser.add_argument_group("Organization",
                                                 "Set the main organization information for importing the data")
-    main_org_params.add_argument("--organization_name", "-name", help="The main organization name", required=True)
     main_org_params.add_argument("--user", "-u", help="The main organization name", required=True)
     main_org_params.add_argument("--namespace", "-n", help="The subjects namespace uri", required=True)
     main_org_params.add_argument("--type", "-t", help="The type to import [static] or [ts]", required=True)
@@ -65,7 +64,7 @@ if __name__ == "__main__":
 
         # Join dataframes by link
         df = supplies_df.join(building_df, on='id_centres_consum', lsuffix="supply", rsuffix="building")
-        map_data_static(df.to_dict(orient="records"), organization_name=args.organization_name, namespace=args.namespace,
+        map_data_static(df.to_dict(orient="records"), namespace=args.namespace,
                         user=args.user, config=config)
 
     elif args.type == "ts":

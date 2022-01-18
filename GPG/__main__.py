@@ -16,7 +16,6 @@ if __name__ == "__main__":
 
     main_org_params = parser.add_argument_group("Organization",
                                                 "Set the main organization information for importing the data")
-    main_org_params.add_argument("--organization_name", "-name", help="The main organization name", required=True)
     main_org_params.add_argument("--user", "-u", help="The user importing the data", required=True)
     main_org_params.add_argument("--namespace", "-n", help="The subjects namespace uri", required=True)
     if os.getenv("PYCHARM_HOSTED"):
@@ -41,5 +40,5 @@ if __name__ == "__main__":
             item.update({"Num_Ens_Inventari": n_ens})
             dic_list.append(item)
         print("parsed. Mapping...")
-        map_data(dic_list, organization_name=args.organization_name, namespace=args.namespace, user=args.user,
+        map_data(dic_list, namespace=args.namespace, user=args.user,
                  organizations=args.organizations, config=config)

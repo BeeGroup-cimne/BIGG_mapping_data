@@ -13,14 +13,13 @@ source = "gemweb"
 
 
 def map_data(data, **kwargs):
-    organization_name = kwargs['organization_name']
     namespace = kwargs['namespace']
     user = kwargs['user']
     config = kwargs['config']
 
     neo = GraphDatabase.driver(**config['neo4j'])
     n = Namespace(namespace)
-    set_params(organization_name, source, n)
+    set_params(source, n)
     with neo.session() as ses:
         source_id = ses.run(
             f"""Match (o: ns0__Organization{{ns0__userId: "{user}"}})-[:ns0__hasSource]->(s:GemwebSource) 

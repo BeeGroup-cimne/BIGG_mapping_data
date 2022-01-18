@@ -12,10 +12,11 @@ from utils import save_rdf_with_source
 source = "GPG"
 
 
-def harmonize_organization_names(g, user_id, organization_name, namespace, neo4j_conn):
+def harmonize_organization_names(g, user_id, namespace, neo4j_conn):
     # Get all existing Organizations typed department
     neo = GraphDatabase.driver(**neo4j_conn)
     with neo.session() as s:
+        organization_name = s.run(f"""MATCH (m:ns0__Organization {{ns0__userId: "{user_id}"}}) return m.ns0__organizationName""").single().value()
         organization_names = s.run(f"""
          MATCH (m:ns0__Organization {{ns0__userId: "{user_id}"}})-[*]->(n:ns0__Organization{{ns0__organizationDivisionType: "Department"}})
          RETURN n.uri
@@ -59,18 +60,18 @@ def harmonize_organization_names(g, user_id, organization_name, namespace, neo4j
 
 
 def map_data(data, **kwargs):
-    organization_name = kwargs['organization_name']
+    #organization_name = kwargs['organization_name']
     namespace = kwargs['namespace']
     user = kwargs['user']
     config = kwargs['config']
     organizations = kwargs['organizations'] if 'organizations' in kwargs else False
 
     n = Namespace(namespace)
-    set_params(organization_name, source, n)
+    set_params(source, n)
     df = pd.DataFrame.from_records(data)
     if organizations:
         g = generate_rdf(get_mappings("all"), df)
-        g = harmonize_organization_names(g, user, organization_name, n, config['neo4j'])
+        g = harmonize_organization_names(g, user, n, config['neo4j'])
     else:
         g = generate_rdf(get_mappings("buildings"), df)
     save_rdf_with_source(g, source, config['neo4j'])

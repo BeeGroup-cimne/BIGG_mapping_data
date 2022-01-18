@@ -5,13 +5,10 @@ from rdf_utils.big_classes import Organization, Building, LocationInfo, Cadastra
 from slugify import slugify as slugify
 from utils import *
 
-ORGANIZATION_MAIN = None
 source = None
 
 
-def set_params(organization, s, namespace):
-    global ORGANIZATION_MAIN
-    ORGANIZATION_MAIN = organization
+def set_params(s, namespace):
     global source
     source = s
     Organization.set_namespace(namespace)
@@ -27,27 +24,6 @@ def set_params(organization, s, namespace):
 
 
 def get_mappings(group):
-
-    main_organization = {
-        "name": "main_organization",
-        "class": Organization,
-        "type": {
-            "origin": "static",
-        },
-        "params": {
-            "raw": {
-                "subject": slugify(ORGANIZATION_MAIN),
-                "organizationName": ORGANIZATION_MAIN,
-                "organizationDivisionType": "Organization"
-            }
-        },
-        "links": {
-            "gemweb_link": {
-                "type": Bigg.hasSource,
-                "link": "__all__"
-            }
-        }
-    }
 
     building = {
         "name": "building",
@@ -298,7 +274,7 @@ def get_mappings(group):
     }
 
     grouped_modules = {
-        "linked": [main_organization, building, location_info, cadastral_info, building_space,
+        "linked": [building, location_info, cadastral_info, building_space,
                    gross_floor_area, building_element, device, utility_point],
         "unlinked": [device]
     }
