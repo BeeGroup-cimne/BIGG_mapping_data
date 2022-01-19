@@ -13,7 +13,6 @@ def map_data(data, **kwargs):
     source = kwargs['source']
     user = kwargs['user']
     namespace = kwargs['namespace']
-    organization_name = kwargs['organization_name']
     df = pd.DataFrame.from_records(data)
     if df.empty:
         return
@@ -32,7 +31,7 @@ def map_data(data, **kwargs):
         uri = [get_code_ens(x.value()) for x in element_id]
     df = df[df["ce"].isin(uri)]
     n = Namespace(namespace)
-    set_params(organization_name, source, n)
+    set_params(source, n)
     g = generate_rdf(get_mappings("all"), df)
     save_rdf_with_source(g, source, config['neo4j'])
 

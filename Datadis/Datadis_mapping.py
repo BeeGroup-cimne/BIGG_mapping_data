@@ -5,13 +5,10 @@ from rdf_utils.big_classes import Organization, Building, LocationInfo, Cadastra
 from slugify import slugify as slugify
 from utils import *
 
-ORGANIZATION_MAIN = None
 source = None
 
 
-def set_params(organization, s, namespace):
-    global ORGANIZATION_MAIN
-    ORGANIZATION_MAIN = organization
+def set_params(s, namespace):
     global source
     source = s
     LocationInfo.set_namespace(namespace)

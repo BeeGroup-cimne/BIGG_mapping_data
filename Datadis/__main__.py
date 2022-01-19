@@ -9,13 +9,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Mapping of Datadis data to neo4j.')
     main_org_params = parser.add_argument_group("Organization",
                                                 "Set the main organization information for importing the data")
-    main_org_params.add_argument("--organization_name", "-name", help="The main organization name", required=True)
     main_org_params.add_argument("--user", "-u", help="The main organization name", required=True)
     main_org_params.add_argument("--namespace", "-n", help="The subjects namespace uri", required=True)
     main_org_params.add_argument("--type", "-t", help="The type to import [static] or [ts]", required=True)
 
     if os.getenv("PYCHARM_HOSTED"):
-        args_t = ["-name", "Generalitat de Catalunya", "-n", "http://icaen.cat#", "-u", "icaen", "-t", "ts"]
+        args_t = ["-n", "http://icaen.cat#", "-u", "icaen", "-t", "ts"]
         args = parser.parse_args(args_t)
     else:
         args = parser.parse_args()
@@ -37,8 +36,7 @@ if __name__ == "__main__":
                 supplies.append(item)
             if len(supplies) <= 0:
                 continue
-            map_data_static(supplies, organization_name=args.organization_name,
-                            namespace=args.namespace,
+            map_data_static(supplies, namespace=args.namespace,
                             user=args.user, source=source, config=config)
 
     elif args.type == "ts":

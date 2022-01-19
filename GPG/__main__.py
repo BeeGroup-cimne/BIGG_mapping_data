@@ -19,7 +19,7 @@ if __name__ == "__main__":
     main_org_params.add_argument("--user", "-u", help="The user importing the data", required=True)
     main_org_params.add_argument("--namespace", "-n", help="The subjects namespace uri", required=True)
     if os.getenv("PYCHARM_HOSTED"):
-        args_t = ["-name", "Generalitat de Catalunya", "-n", "http://icaen.cat#", "-u", "icaen", "-o"]
+        args_t = ["-n", "http://icaen.cat#", "-u", "icaen", "-o"]
         args = parser.parse_args(args_t)
     else:
         args = parser.parse_args()

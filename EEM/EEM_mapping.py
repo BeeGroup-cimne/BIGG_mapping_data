@@ -4,13 +4,10 @@ from rdf_utils.big_classes import BuildingConstructionElement, EnergyEfficiencyM
 from slugify import slugify as slugify
 from utils import *
 
-ORGANIZATION_MAIN = None
 source = None
 
 
-def set_params(organization, s, namespace):
-    global ORGANIZATION_MAIN
-    ORGANIZATION_MAIN = organization
+def set_params(s, namespace):
     global source
     source = s
     BuildingConstructionElement.set_namespace(namespace)

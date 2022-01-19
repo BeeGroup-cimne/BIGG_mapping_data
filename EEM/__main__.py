@@ -23,12 +23,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Mapping of EEM data to neo4j.')
     main_org_params = parser.add_argument_group("Organization",
                                                 "Set the main organization information for importing the data")
-    main_org_params.add_argument("--organization_name", "-name", help="The main organization name", required=True)
     main_org_params.add_argument("--user", "-u", help="The main organization name", required=True)
     main_org_params.add_argument("--namespace", "-n", help="The subjects namespace uri", required=True)
 
     if os.getenv("PYCHARM_HOSTED"):
-        args_t = ["-name", "Generalitat de Catalunya", "-n", "http://icaen.cat#", "-u", "icaen" ]
+        args_t = ["-n", "http://icaen.cat#", "-u", "icaen" ]
         args = parser.parse_args(args_t)
     else:
         args = parser.parse_args()
@@ -52,4 +51,4 @@ if __name__ == "__main__":
             item.update({"id_": id_})
             dic_list.append(item)
         map_data(dic_list, config=config, source=source, namespace=args.namespace,
-                 user=args.user, organization_name=args.organization_name)
+                 user=args.user)

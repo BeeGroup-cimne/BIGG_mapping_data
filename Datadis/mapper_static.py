@@ -10,7 +10,6 @@ from utils import decode_hbase, save_rdf_with_source, link_devices_with_source
 
 
 def map_data(data, **kwargs):
-    organization_name = kwargs['organization_name']
     namespace = kwargs['namespace']
     user = kwargs['user']
     source = kwargs['source']
@@ -29,7 +28,7 @@ def map_data(data, **kwargs):
         cups_code = {x['u.ns0__pointOfDeliveryIDFromUser']: x['b.ns0__buildingIDFromOrganization']
                      for x in datadis_source}
 
-        df['decoded_cups'] = df.cups.apply(bytes.decode)
+        df['decoded_cups'] = df.cups.apply(decode_hbase)
         df['NumEns'] = df.decoded_cups.apply(lambda x: cups_code[x] if x in cups_code else None)
         linked_supplies = df[df["NumEns"].isna() == False]
         unlinked_supplies = df[df["NumEns"].isna()]
@@ -39,11 +38,11 @@ def map_data(data, **kwargs):
                 if supply_by_group.empty:
                     continue
                 datadis_source = ses.run(
-                    f"""Match (n: DatadisSource{{username:"{group.decode()}"}}) return n""").single()
+                    f"""Match (n: DatadisSource{{username:"{decode_hbase(group)}"}}) return n""").single()
                 datadis_source = datadis_source.get("n").id
                 print("generating rdf")
                 n = Namespace(namespace)
-                set_params(organization_name, source, n)
+                set_params(source, n)
                 g = generate_rdf(get_mappings(linked), supply_by_group)
                 print("saving to neo4j")
                 save_rdf_with_source(g, source, config['neo4j'])

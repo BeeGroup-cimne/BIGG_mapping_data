@@ -5,6 +5,8 @@ import pandas as pd
 
 import GPG.mapper_static as gpg_mapper
 import Gemweb.mapper_static as gemweb_mapper
+import Datadis.mapper_static as datadis_mapper
+import EEM.mapper as eem_mapper
 import settings
 from utils import read_from_kafka, read_config, mongo_logger
 
@@ -35,6 +37,22 @@ if __name__ == '__main__':
                 "namespace": message['namespace'],
                 "user": message['user'],
                 "config": config
+            }
+        elif message['source'] == "datadis":
+            mapper = datadis_mapper
+            kwargs_function = {
+                "namespace": message['namespace'],
+                "user": message['user'],
+                "config": config,
+                "source": message['source']
+            }
+        elif message['source'] == "genercat":
+            mapper = eem_mapper
+            kwargs_function = {
+                "namespace": message['namespace'],
+                "user": message['user'],
+                "config": config,
+                "source": message['source']
             }
         else:
             mongo_logger.log(f"not implemented type received: {message['source']}")
