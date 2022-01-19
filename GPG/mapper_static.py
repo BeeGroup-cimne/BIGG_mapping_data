@@ -24,14 +24,14 @@ def harmonize_organization_names(g, user_id, namespace, neo4j_conn):
         dep_uri = [x.value() for x in organization_names]
 
     # Get all organizations in rdf graph using sparql
-    query_department = """
+    query_department = f"""
         PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-        PREFIX bigg:<http://example/BiggOntology#>
+        PREFIX bigg:<{str(Bigg)}>
         SELECT DISTINCT ?sub
-        WHERE {
+        WHERE {{
             ?sub rdf:type bigg:Organization .
             ?sub bigg:organizationDivisionType "Department" .
-        }
+        }}
      """
     r_dep = g.query(query_department)
     g_altres = generate_rdf(get_mappings("other"), pd.DataFrame())

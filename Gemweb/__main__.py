@@ -25,7 +25,7 @@ if __name__ == "__main__":
     main_org_params.add_argument("--type", "-t", help="The type to import [static] or [ts]", required=True)
 
     if os.getenv("PYCHARM_HOSTED"):
-        args_t = ["-name", "Generalitat de Catalunya", "-n", "http://icaen.cat#", "-u", "icaen", "-t", "ts"]
+        args_t = ["-n", "http://icaen.cat#", "-u", "icaen", "-t", "ts"]
         args = parser.parse_args(args_t)
     else:
         args = parser.parse_args()

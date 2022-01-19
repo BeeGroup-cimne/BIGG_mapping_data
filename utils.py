@@ -154,13 +154,13 @@ def save_rdf_with_source(graph, source, connection):
 
 
 def link_devices_with_source(g, source_id, neo4j_connection):
-    query_devices = """
+    query_devices = f"""
                PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-               PREFIX bigg:<http://example/BiggOntology#>
+               PREFIX bigg:<{str(Bigg)}>
                SELECT DISTINCT ?sub
-               WHERE {
+               WHERE {{
                    ?sub rdf:type bigg:Device .
-               }    
+               }}    
             """
     r_devices = g.query(query_devices)
     neo = GraphDatabase.driver(**neo4j_connection)
