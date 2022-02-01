@@ -50,7 +50,6 @@ def get_mappings(group):
         }
     }
 
-
     building_space = {
         "name": "building_space",
         "class": BuildingSpace,

@@ -54,7 +54,7 @@ if __name__ == "__main__":
                         item[k1] = v
                     cups, ts = key.decode().split("~")
                     item.update({"cups": cups.encode("utf-8")})
-                    item.update({"measurement_ini": ts.encode("utf-8")})
+                    item.update({"timestamp": ts.encode("utf-8")})
                     data_list.append(item)
                 if len(data_list) <= 0:
                     continue

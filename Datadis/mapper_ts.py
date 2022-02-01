@@ -19,22 +19,22 @@ def map_data(data, **kwargs):
     namespace = kwargs['namespace']
     user = kwargs['user']
     config = kwargs['config']
-    source = kwargs['source']
+
     hbase_conn2 = config['hbase_harmonized_data']
     neo4j_connection = config['neo4j']
 
     neo = GraphDatabase.driver(**neo4j_connection)
     n = Namespace(namespace)
     df = pd.DataFrame.from_records(data)
-    df["ts"] = pd.to_datetime(df['measurement_ini'].apply(bytes.decode).apply(int), unit="s")
-    df['measurement_ini'] = df['measurement_ini'].apply(bytes.decode)
+    df["ts"] = pd.to_datetime(df['timestamp'].apply(decode_hbase).apply(int), unit="s")
+    df['measurement_ini'] = df['timestamp'].apply(decode_hbase)
     df['measurement_end'] = (df.ts + time_to_timedelta[freq]).astype(int) / 10**9
-    df['value'] = df['consumptionKWh'].apply(bytes.decode)
+    df['value'] = df['consumptionKWh'].apply(decode_hbase)
     for cups, data_group in df.groupby("cups"):
         data_group.set_index("ts", inplace=True)
         data_group.sort_index(inplace=True)
         # find device with ID imported from source
-        device_id = cups.decode()
+        device_id = decode_hbase(cups)
 
         dt_ini = data_group.iloc[0].name
         dt_end = data_group.iloc[-1].name
@@ -43,11 +43,11 @@ def map_data(data, **kwargs):
             device_neo = session.run(f"""
             MATCH (ns0__Organization{{ns0__userId:'{user}'}})-[:ns0__hasSubOrganization*0..]->(o:ns0__Organization)-
             [:ns0__hasSource]->(s:DatadisSource)<-[:ns0__importedFromSource]-(d)
-            WHERE d.uri =~ ".*#{device_id}-DEVICE-{source}" return d            
+            WHERE d.uri =~ ".*#{device_id}-DEVICE-datadis" return d            
             """)
             for d_neo in device_neo:
                 prefix = (device_id + '~').encode("utf-8")
-                list_id = f"{device_id}-DEVICE-{source}-LIST-RAW-{freq}"
+                list_id = f"{device_id}-DEVICE-datadis-LIST-RAW-{freq}"
                 list_uri = str(n[list_id])
                 new_d_id = hashlib.sha256(list_uri.encode("utf-8"))
                 new_d_id = new_d_id.hexdigest()
@@ -67,11 +67,11 @@ def map_data(data, **kwargs):
                                 THEN list.ns0__measurementListStart 
                                 ELSE datetime("{dt_ini.tz_localize("UTC").to_pydatetime().isoformat()}") 
                             END,
- 	                    list.ns0__measurementListEnd = CASE 
- 	                    WHEN list.ns0__measurementListEnd > datetime("{dt_end.tz_localize("UTC").to_pydatetime().isoformat()}") 
- 	                        THEN list.ns0__measurementListStart 
- 	                        ELSE datetime("{dt_end.tz_localize("UTC").to_pydatetime().isoformat()}") 
- 	                    END  
+                        list.ns0__measurementListEnd = CASE 
+                            WHEN list.ns0__measurementListEnd > datetime("{dt_end.tz_localize("UTC").to_pydatetime().isoformat()}") 
+                                THEN list.ns0__measurementListStart 
+                                ELSE datetime("{dt_end.tz_localize("UTC").to_pydatetime().isoformat()}") 
+                            END  
                     return list
                 """)
                 data_group['listKey'] = new_d_id
@@ -81,3 +81,6 @@ def map_data(data, **kwargs):
                 period_table = f"data_{freq}_{user}_period"
                 save_to_hbase(data_group.to_dict(orient="records"), period_table, hbase_conn2,
                               [("info", ['measurement_end']), ("v", ['value'])], row_fields=['measurement_ini', 'listKey'])
+                print(f"harmonized {device_table}_{device_id}: {len(data_group)}")
+                print(data_group.iloc[0].datetime)
+                print(data_group.iloc[-1].datetime)
